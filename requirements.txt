@@ -1,8 +1,11 @@
 openai
 anthropic
+google-generativeai
 slack-bolt
 slack-sdk
 python-dotenv
 requests
 beautifulsoup4
 schedule
+python-docx
+PyPDF2

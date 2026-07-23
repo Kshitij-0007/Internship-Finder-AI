@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .env
 logs/*.log
+!logs/.gitkeep
+extract_docs.py
+data/memory_snapshot.json
