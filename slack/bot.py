@@ -20,41 +20,46 @@ class HermesSlackBot:
 
     Handles slash commands and messages from Slack, translates
     them into events on the bus.
-
-    Usage::
-
-        bot = HermesSlackBot()
-        bot.start()  # starts the Bolt app
     """
 
     def __init__(self) -> None:
         self._app = None
         self._handler = None
 
-    def _init_app(self) -> None:
+    def _init_app(self) -> bool:
         """Lazy-initialize the Slack Bolt app."""
         if self._app is not None:
-            return
+            return True
+
+        bot_token = os.getenv("SLACK_BOT_TOKEN")
+        app_token = os.getenv("SLACK_APP_TOKEN")
+
+        if not bot_token or not app_token:
+            logger.warning(
+                "Slack tokens missing! Please set SLACK_BOT_TOKEN and SLACK_APP_TOKEN in .env"
+            )
+            print(
+                "\n[!] WARNING: Slack tokens missing in .env!\n"
+                "    Please set SLACK_BOT_TOKEN and SLACK_APP_TOKEN in your .env file to activate Slack Socket Mode.\n"
+            )
+            return False
 
         try:
             from slack_bolt import App
             from slack_bolt.adapter.socket_mode import SocketModeHandler
 
             self._app = App(
-                token=os.getenv("SLACK_BOT_TOKEN"),
+                token=bot_token,
                 signing_secret=os.getenv("SLACK_SIGNING_SECRET"),
             )
             self._register_commands()
-            self._handler = SocketModeHandler(
-                self._app, os.getenv("SLACK_APP_TOKEN")
-            )
-            logger.info("Slack Bolt app initialized")
-        except ImportError:
-            logger.error("slack-bolt not installed")
-            raise
+            self._handler = SocketModeHandler(self._app, app_token)
+            logger.info("Slack Bolt app initialized successfully")
+            return True
         except Exception as exc:
             logger.error("Failed to initialize Slack app: %s", exc)
-            raise
+            print(f"\n[!] Slack initialization error: {exc}")
+            return False
 
     def _register_commands(self) -> None:
         """Register Slack command handlers."""
@@ -87,9 +92,11 @@ class HermesSlackBot:
 
     def start(self) -> None:
         """Start the Slack bot."""
-        self._init_app()
+        if not self._init_app():
+            return
         if self._handler:
-            logger.info("Starting Slack bot...")
+            logger.info("Starting Slack bot listener...")
+            print("[+] Slack bot listener active! Waiting for slash commands...")
             self._handler.start()
 
     def stop(self) -> None:

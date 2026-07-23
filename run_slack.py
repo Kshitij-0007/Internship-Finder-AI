@@ -92,7 +92,7 @@ def main():
     hermes.boot()
 
     # 5. Connect and start Slack Bot
-    print("\n⚡ Connecting to Slack Socket Mode...")
+    print("\n[+] Connecting to Slack Socket Mode...")
     slack_bot = HermesSlackBot()
     try:
         slack_bot.start()
